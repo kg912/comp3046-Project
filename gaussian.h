@@ -26,7 +26,7 @@ void print_matrix(double **m, int r, int c, char *file);
 // =============================================================================
 void free_matrix(double **m, int r, int c);
 // =============================================================================
-void gauss_elimination(double *A, int n, double *b, double *y);
+void gauss_elimination(double *A, int n, double *b, double *x, double *y);
 // =============================================================================
 
 
