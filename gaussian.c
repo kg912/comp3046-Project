@@ -1,9 +1,7 @@
-// ---------------------gaussian.c---------------------
+/* ---------------------gaussian.c--------------------- */
 #include <stdio.h>
 #include <stdlib.h>
 #include "gaussian.h"
-
-
 
 /* initialize a matrix x. You need to call srand() in advance. */
 void Mat_Init(int row, int col, double *X)
@@ -91,7 +89,7 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 	}
 	//***********for check purpose***********//
 	printf("\n----------------------------------\nResults: ");
-	Vec_Show(n, x);
+	//Vec_Show(n, x);
 }
 
 
@@ -103,7 +101,7 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 	for (k = 0; k < n; k++) {
 
 		//part1
-//#  pragma omp parallel for num_threads(thread_count) \
+#  pragma omp parallel for num_threads(thread_count) \
 			default(none) private( i, j ) shared(n, A, b, k)
 		for (j = k + 1; j < n; j++) {
 			A[k * n + j] = A[k * n + j] / A[k * n + k];
@@ -112,7 +110,7 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 		A[k *n + k] = 1;
 
 		//part 2
-//#  pragma omp parallel for num_threads(thread_count) \
+#  pragma omp parallel for num_threads(thread_count) \
 				default(none) private( i, j) shared(n, A, b, y, k)
 		for (i = k + 1; i < n; i++) {
 			for (j = k + 1; j < n; j++){
@@ -131,7 +129,7 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 	
 	//Back-substitution parts
 
-//#  pragma omp parallel for num_threads(thread_count) \
+# pragma omp parallel for num_threads(thread_count) \
 		default(none) private(i) shared(A, x, y, n, k)
 	for (k = n - 1; k >= 0; k--)
 	{
@@ -142,11 +140,7 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 		}
 	}
 	//***********for check purpose***********//
-	printf("\n----------------------------------\nResults: ");
-	Vec_Show(n, x);
+	//printf("\n----------------------------------\nResults: ");
+	//Vec_Show(n, x);
 
 }
-
-
-
-
