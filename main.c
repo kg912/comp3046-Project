@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <windows.h>
 #include <time.h>
 #include <omp.h>
 #include "gaussian.h"
