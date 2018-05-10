@@ -1,160 +1,102 @@
 // ---------------------gaussian.c---------------------
 #include <stdio.h>
-#include <stdlib.h>
+#include <windows.h>
+#include <time.h>
+#include <omp.h>
 #include "gaussian.h"
 
 
-
-/* initialize a matrix x. You need to call srand() in advance. */
-void Mat_Init(int row, int col, double *X)
+int main()
 {
-	int i, size;
+	double *A, *originA, *tmp; /* matrix */
+	double *x, *y, *b, *originb; /* vectors */
+	double start, end, start1, end1; //time conuter
+	int r, c; // row and column 
+	int n; //number of equations
+	int thread_count;
+	int result;
 
-	size = row * col;
-	for (i = 0; i < size; i++)
-		X[i] = (double)((float)rand()) / ((float)RAND_MAX) * 100;
-}
+	printf("Please input the number of equations:");
+	scanf("%d", &n);
 
+	r = n;
+	c = n;
 
+	A = (double*)malloc(r*c*sizeof(double));	//memory for Matrix
+	if (A == NULL)
+		return -1;
 
-/* display a matrix */
-void Mat_Show(int row, int col, double *X)
-{
-	int i, j;
-	printf("row = %d col = %d\n", row, col);
-	for (i = 0; i < row; i++) {
-		for (j = 0; j < col; j++)
-			printf("%.4f ", X[col * i + j]);
-		printf("\n");
+	originA = (double*)malloc(r * c * sizeof(double)); //memory for original Matrix
+	if (originA == NULL)
+		return -1;
+
+	b = (double*)malloc(r * sizeof(double)); //memory for vector
+	if (b == NULL)
+		return -1;
+
+	originb = (double*)malloc(r * sizeof(double)); //memory for original vector
+	if (originb == NULL)
+		return -1;
+
+	x = (double *)malloc(r * sizeof(double));
+	if (x == NULL)
+		return -1;
+
+	y = (double*)malloc(r * sizeof(double)); //memory for substitution vector
+	if (y == NULL)
+		return -1;
+
+	originA = A;
+
+	/* Initialize the matrix X and vector v*/
+	srand((unsigned)time(NULL));
+
+	originA = A;
+	originb = b;
+
+	//inintialize matrix and vector
+	Mat_Init(r, c, A);
+	Vec_Init(r, b);
+
+	printf("\n-----------------------------------------------\nCalculation implements the single thread: ");
+	printf("\n----------------After elimination------------------\n");
+	/* calculate and record its running time */
+	start = omp_get_wtime();
+	gauss_elimination(A, n, b, x, y);
+	end = omp_get_wtime();
+	printf("Single thread takes %f millisecond.\n", (end - start) * 1000);
+	//using openMP 
+
+	
+	printf("\n-----------------------------------------------\nCalculation implements the OpenMP: ");
+	printf("\nIt will loop 10 times to test withdiffernet thread counts");
+
+	//try do many times for one set of equations
+	for (int m = 0; m < 10; m = m + 1){
+	
+		printf("\nPlease input the number of threads: ");
+		scanf("%d", &thread_count);
+		/* calculate and record its running time */
+
+		start = omp_get_wtime();
+		gauss_elimination_omp(A, n, b, x, y, thread_count);
+
+		//printf("%d ", result);
+		//*if (result == a)
+		//{
+		//	printf("The result is right\n!");
+		//}
+		//else
+		//{
+		//	printf("The result is wrong\n!");
+		//}
+		end = omp_get_wtime();
+		printf("The calculation cost %f milliseconds with openmp methord\n", (end - start) * 1000);	
 	}
-}
 
-
-/* initialize a vector x */
-void Vec_Init(int size, double *x)
-{
-	int i;
-
-	for (i = 0; i < size; i++)
-		x[i] = (double)((float)rand()) / ((float)RAND_MAX) * 100;
-}
-
-/* display a vector */
-void Vec_Show(int size, double *x)
-{
-	int i;
-
-	printf("\nvector size = %d\n", size);
-	for (i = 0; i < size; i++)
-		printf("%.4f ", x[i]);
-	printf("\n");
-}
-
-
-//free a matrix
-void free_matrix(double **m, int r, int c)
-{
-	int i;
-
-	if (m) {
-		for (i = 0; i < r; i++) {
-			free(m[i]);
-		}
-		free(m);
-	}
-}
-
-
-/* gaussian elimination function using single thread */
-void gauss_elimination(double *A, int n, double *b, double *x, double *y)
-{
-	int i, j, k;
-	double temp;
-	//gauss elimination parts
-	for (k = 0; k < n - 1; k++) {
-		for (j = k + 1; j < n - 1; j++) {
-			temp = A[k * n + j] / A[k * n + k];
-		}
-		y[k] = b[k] / A[k *n + k];
-		A[k *n + k] = 1;
-
-		for (i = k + 1; i <= n - 1; i++) {
-			for (j = k + 1; j < n - 1; j++){
-				A[i*n + j] = A[i*n + j] - A[i* n + k] * temp;
-			};
-			b[i] = b[i] - A[i * n + k] * y[k];
-			A[i * n + k] = 0;
-		}
-	}
-	printf("\nMatrix after elimination: ");
-
-	Mat_Show(n, n, A);
-	printf("\nvectors after elimination:");
-	Vec_Show(n, b);
-
-	//Back-substitution parts
-	for (k = n - 1; k >= 0; k--)
-	{
-		x[k] = y[k];
-		for (i = k - 1; i >= 0; i--)
-		{
-			y[i] = y[i] - x[k] * A[i * n + k];
-		}
-	}
-	printf("\n-----------------------------------------------\nResults: ");
-	Vec_Show(n, x);
-}
-
-
-/* gaussian elimination function using parallel threads with OpenMP methord r */
-void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, int thread_count)
-{
-	int i, j, k;
-	double temp;
-
-	//gauss elimination parts
-	for (k = 0; k < n - 1; k++) {
-		//part 1
-		#  pragma omp parallel for num_threads(thread_count) \
-				private(i, j) shared(A, b, y, k)
-				for (i = 0; i < thread_count; i++){
-					for (j = (k + 1) / thread_count; j < n / thread_count; j++)
-					{
-						A[k * n + j] = A[k * n + j] / A[k * n + k];
-					}
-				}
-				y[k] = b[k] / A[k *n + k];
-				A[k *n + k] = 1;
-		//part 2
-		#  pragma omp parallel for num_threads(thread_count) \
-				default(none) private(k, i, j) shared(n, A, b, y, k)
-		for (i = k + 1; i <= n - 1; i++) {
-			for (j = k + 1; j < n - 1; j++){
-				A[i*n + j] = A[i*n + j] - A[i* n + k] * A[k * n + j];
-			};
-			b[i] = b[i] - A[i * n + k] * y[k];
-			A[i * n + k] = 0;
-		}
-	}
-	printf("\nMatrix after elimination: ");
-
-	Mat_Show(n, n, A);
-	printf("\nvectors after elimination:");
-	Vec_Show(n, b);
-
-
-	//Back-substitution parts
-	#  pragma omp parallel for num_threads(thread_count) \
-			default(none) private(i) shared(A, x, y, n, k)
-
-	for (k = n - 1; k >= 0; k--)
-	{
-		x[k] = y[k];
-		for (i = k - 1; i >= 0; i--)
-		{
-			y[i] = y[i] - x[k] * A[i * n + k];
-		}
-	}
-	printf("\n-----------------------------------------------\nResults: ");
-	Vec_Show(n, x);
+	free(A);	
+	free(b);
+	free(x);
+	free(y);
+	return(0);
 }
