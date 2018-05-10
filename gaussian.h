@@ -15,10 +15,10 @@ void Vec_Init(int size, double *x);
 /* display a vector */
 void Vec_Show(int size, double *b);
 
-void free_matrix(double **m, int r, int c);
-
+/* gaussian elimination function using single thread */
 void gauss_elimination(double *A, int n, double *b, double *x, double *y);
 
+/* gaussian elimination function using parallel threads r */
 void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, int thread_count);
 
 #endif
