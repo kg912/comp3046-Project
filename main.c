@@ -1,17 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 #include <time.h>
 #include <omp.h>
 #include "gaussian.h"
-
 
 int main()
 {
 	double *A, *originA, *tmp; /* matrix */
 	double *x, *y, *b, *originb; /* vectors */
-	double start, end; //time conuter
+	double start, end, start1, end1; //time conuter
 	int r, c; // row and column 
 	int n; //number of equations
-	int thread_count; 
+	int thread_count;
+	int result;
 
 	printf("Please input the number of equations:");
 	scanf("%d", &n);
@@ -23,15 +25,15 @@ int main()
 	if (A == NULL)
 		return -1;
 
-	originA = (double*)malloc(r*c*sizeof(double)); //memory for original Matrix
+	originA = (double*)malloc(r * c * sizeof(double)); //memory for original Matrix
 	if (originA == NULL)
 		return -1;
 
-	b = (double*)malloc(r*sizeof(double)); //memory for vector
+	b = (double*)malloc(r * sizeof(double)); //memory for vector
 	if (b == NULL)
 		return -1;
 
-	originb = (double*)malloc(r*sizeof(double)); //memory for original vector
+	originb = (double*)malloc(r * sizeof(double)); //memory for original vector
 	if (originb == NULL)
 		return -1;
 
@@ -39,7 +41,7 @@ int main()
 	if (x == NULL)
 		return -1;
 
-	y = (double*)malloc(r*sizeof(double)); //memory for substitution vector
+	y = (double*)malloc(r * sizeof(double)); //memory for substitution vector
 	if (y == NULL)
 		return -1;
 
@@ -55,15 +57,45 @@ int main()
 	Mat_Init(r, c, A);
 	Vec_Init(r, b);
 
-	printf("\n-----------------------------------------------\nOriginal Matrix: ");
-	Mat_Show( r,  c,  A);
-	printf("\n-----------------------------------------------\nOriginal vectors:");
-	Vec_Show(n , b);
-	printf("\n----------------After elimination------------------\n");
-	gauss_elimination(A, n, b, x, y);
-	
-	/* calculate Xv and record its running time */
+	printf("\n-----------------------------------------------\nCalculation implements the single thread: ");
+	printf("\n--After elimination------------------\n");
+	/* calculate and record its running time */
 	start = omp_get_wtime();
-
+	gauss_elimination(A, n, b, x, y);
 	end = omp_get_wtime();
+	printf("Single thread takes %f millisecond.\n", (end - start) * 1000);
+	//using openMP 
+
+	
+	printf("\n-----------------------------------------------\nCalculation implements the OpenMP: ");
+	printf("\nIt will loop 10 times to test withdiffernet thread counts");
+
+	//try do many times for one set of equations
+	for (int m = 0; m < 10; m = m + 1){
+	
+		printf("\nPlease input the number of threads: ");
+		scanf("%d", &thread_count);
+		/* calculate and record its running time */
+
+		start = omp_get_wtime();
+		gauss_elimination_omp(A, n, b, x, y, thread_count);
+
+		//printf("%d ", result);
+		//*if (result == a)
+		//{
+		//	printf("The result is right\n!");
+		//}
+		//else
+		//{
+		//	printf("The result is wrong\n!");
+		//}
+		end = omp_get_wtime();
+		printf("The calculation cost %f milliseconds with openmp methord\n", (end - start) * 1000);	
+	}
+
+	free(A);	
+	free(b);
+	free(x);
+	free(y);
+	return(0);
 }
