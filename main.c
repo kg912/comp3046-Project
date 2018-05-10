@@ -1,3 +1,5 @@
+/* ---------------------main.c--------------------- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -100,13 +102,13 @@ int main()
 		pb[i] = originb[i];
 	}
 
-	printf("\n-----------------------------------------------\noriginal Matrix:");
-	Mat_Show(n, n, originA);
-	Mat_Show(n, n, pA);
-	Vec_Show(n, originb);
+	//printf("\noriginal Matrix:");
+	//Mat_Show(n, n, originA);
+	//Mat_Show(n, n, pA);
+	//Vec_Show(n, originb);
 
 	printf("\n-----------------------------------------------\nCalculation implements the single thread: ");
-	printf("\n--After elimination------------------\n");
+	//printf("\n--After elimination------------------\n");
 	/* calculate and record its running time */
 	start = omp_get_wtime();
 	gauss_elimination(A, n, b, x, y);
@@ -131,28 +133,28 @@ int main()
 	//using openMP 	
 	printf("\n-----------------------------------------------\nCalculation implements the OpenMP: ");
 	printf("\nIt will loop 10 times to test withdiffernet thread counts");
-
-	//try do many times for one set of equations
-	printf("\nPlease input the number of threads: ");
-	scanf("%d", &thread_count);
-	/* calculate and record its running time */
-	start = omp_get_wtime();
-	gauss_elimination_omp(pA, n, pb, xnew, ynew, thread_count);
+	
+		//try do many times for one set of equations
+		printf("\nPlease input the number of threads: ");
+		scanf("%d", &thread_count);
+		/* calculate and record its running time */
+		start = omp_get_wtime();
+		gauss_elimination_omp(pA, n, pb, xnew, ynew, thread_count);
 		
 
-	end = omp_get_wtime();
-	printf("The calculation cost %f milliseconds with openmp methord\n", (end - start) * 1000);
-			//do verification
-	int correct = verification(xnew, pA, pb, n);
-	printf("%d ", correctRNo);
-	if (correctRNo == n)
-	{
-		printf("The result is right\n!");
-	}
-	else
-	{
-		printf("The result is wrong\n!");
-	}
+		end = omp_get_wtime();
+		printf("The calculation cost %f milliseconds with openmp methord\n", (end - start) * 1000);
+				//do verification
+		int correct = verification(xnew, pA, pb, n);
+		printf("%d ", correctRNo);
+		if (correctRNo == n)
+		{
+			printf("The result is right\n!");
+		}
+		else
+		{
+			printf("The result is wrong\n!");
+		}
 	
 
 	free(A);
