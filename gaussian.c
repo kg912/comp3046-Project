@@ -1,8 +1,8 @@
-// =============================================================================
+// ---------------------gaussian.c---------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include "gaussian.h"
-// =============================================================================
+
 
 
 /* initialize a matrix x. You need to call srand() in advance. */
@@ -65,7 +65,7 @@ void free_matrix(double **m, int r, int c)
 }
 
 
-
+/* gaussian elimination function using single thread */
 void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 {
 	int i, j, k;
@@ -87,11 +87,11 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 		}
 	}
 	printf("\nMatrix after elimination: ");
-	
+
 	Mat_Show(n, n, A);
 	printf("\nvectors after elimination:");
 	Vec_Show(n, b);
-	
+
 	//Back-substitution parts
 	for (k = n - 1; k >= 0; k--)
 	{
@@ -104,5 +104,57 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 	printf("\n-----------------------------------------------\nResults: ");
 	Vec_Show(n, x);
 }
-			
-	
+
+
+/* gaussian elimination function using parallel threads with OpenMP methord r */
+void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, int thread_count)
+{
+	int i, j, k;
+	double temp;
+
+	//gauss elimination parts
+	for (k = 0; k < n - 1; k++) {
+		//part 1
+		#  pragma omp parallel for num_threads(thread_count) \
+				private(i, j) shared(A, b, y, k)
+				for (i = 0; i < thread_count; i++){
+					for (j = (k + 1) / thread_count; j < n / thread_count; j++)
+					{
+						A[k * n + j] = A[k * n + j] / A[k * n + k];
+					}
+				}
+				y[k] = b[k] / A[k *n + k];
+				A[k *n + k] = 1;
+		//part 2
+		#  pragma omp parallel for num_threads(thread_count) \
+				default(none) private(k, i, j) shared(n, A, b, y, k)
+		for (i = k + 1; i <= n - 1; i++) {
+			for (j = k + 1; j < n - 1; j++){
+				A[i*n + j] = A[i*n + j] - A[i* n + k] * A[k * n + j];
+			};
+			b[i] = b[i] - A[i * n + k] * y[k];
+			A[i * n + k] = 0;
+		}
+	}
+	printf("\nMatrix after elimination: ");
+
+	Mat_Show(n, n, A);
+	printf("\nvectors after elimination:");
+	Vec_Show(n, b);
+
+
+	//Back-substitution parts
+	#  pragma omp parallel for num_threads(thread_count) \
+			default(none) private(i) shared(A, x, y, n, k)
+
+	for (k = n - 1; k >= 0; k--)
+	{
+		x[k] = y[k];
+		for (i = k - 1; i >= 0; i--)
+		{
+			y[i] = y[i] - x[k] * A[i * n + k];
+		}
+	}
+	printf("\n-----------------------------------------------\nResults: ");
+	Vec_Show(n, x);
+}
