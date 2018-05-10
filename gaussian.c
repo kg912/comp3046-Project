@@ -64,10 +64,10 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 		y[k] = b[k] / A[k *n + k];
 		A[k *n + k] = 1;
 
-		for (i = k + 1; i <= n; i++) {
+		for (i = k + 1; i < n; i++) {
 			for (j = k + 1; j < n; j++){
 				A[i*n + j] = A[i*n + j] - A[i* n + k] * A[k * n + j];
-			};
+			}
 			b[i] = b[i] - A[i * n + k] * y[k];
 			A[i * n + k] = 0;
 		}
@@ -79,7 +79,7 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 	/*Mat_Show(n, n, A);
 	printf("\nvectors after elimination:");
 	Vec_Show(n, b);
-*/
+	*/
 	//Back-substitution parts
 	for (k = n - 1; k >= 0; k--)
 	{
@@ -99,56 +99,43 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, int thread_count)
 {
 	int i, j, k;
-	double temp;
-
 	//gauss elimination parts
-	for (k = 0; k < n ; k++) {
-		//part 1
-			for (i = k + 1; i <= n; i++) {
-				for (j = k + 1; j < n; j++){
-					A[i*n + j] = A[i*n + j] - A[i* n + k] * A[k * n + j];
-				};
-				b[i] = b[i] - A[i * n + k] * y[k];
-				A[i * n + k] = 0;
-			}
+	for (k = 0; k < n; k++) {
+
+		//part1
+//#  pragma omp parallel for num_threads(thread_count) \
+			default(none) private( i, j ) shared(n, A, b, k)
+		for (j = k + 1; j < n; j++) {
+			A[k * n + j] = A[k * n + j] / A[k * n + k];
 		}
-		#  pragma omp parallel for num_threads(thread_count) \
-				default(none) private(i, j) shared(A, b, k, n)
-				for (i = 0; i < n; i++){
-					for (j = k + 1 ; j < n ; j++)
-					{
-						A[k * n + j] = A[k * n + j] / A[k * n + k];
-					}
-				}
-				y[k] = b[k] / A[k *n + k];
-				A[k *n + k] = 1;
+		y[k] = b[k] / A[k *n + k];
+		A[k *n + k] = 1;
+
 		//part 2
-		#  pragma omp parallel for num_threads(thread_count) \
+//#  pragma omp parallel for num_threads(thread_count) \
 				default(none) private( i, j) shared(n, A, b, y, k)
-		for (i = k + 1; i <= n ; i++) {
-			for (j = k + 1; j < n ; j++){
+		for (i = k + 1; i < n; i++) {
+			for (j = k + 1; j < n; j++){
 				A[i*n + j] = A[i*n + j] - A[i* n + k] * A[k * n + j];
-			};
+			}
 			b[i] = b[i] - A[i * n + k] * y[k];
 			A[i * n + k] = 0;
+
 		}
+		//***********for check purpose***********//
+		/*printf("\nMatrix after elimination: ");
+		Mat_Show(n, n, A);
+		printf("\nvectors after elimination:");
+		Vec_Show(n, b);*/
 	}
-	//***********for check purpose***********//
-	/*printf("\nMatrix after elimination: ");
-	Mat_Show(n, n, A);
-	printf("\nvectors after elimination:");
-	Vec_Show(n, b);*/
-
-
-	//Back-substitution parts
 	
+	//Back-substitution parts
 
+//#  pragma omp parallel for num_threads(thread_count) \
+		default(none) private(i) shared(A, x, y, n, k)
 	for (k = n - 1; k >= 0; k--)
 	{
 		x[k] = y[k];
-
-		#  pragma omp parallel for num_threads(thread_count) \
-			default(none) private(i) shared(A, x, y, n, k)
 		for (i = k - 1; i >= 0; i--)
 		{
 			y[i] = y[i] - x[k] * A[i * n + k];
@@ -157,4 +144,9 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 	//***********for check purpose***********//
 	printf("\n----------------------------------\nResults: ");
 	Vec_Show(n, x);
+
 }
+
+
+
+
