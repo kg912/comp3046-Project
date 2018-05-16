@@ -145,7 +145,8 @@ int main()
 		end = omp_get_wtime();
 		printf("The calculation cost %f milliseconds with openmp methord\n", (end - start) * 1000);
 				//do verification
-		int correct = verification(xnew, pA, pb, n);
+//		int correct = verification(xnew, pA, pb, n);
+		int correct = verification(xnew, A, b, n);
 		printf("%d ", correctRNo);
 		if (correctRNo == n)
 		{
@@ -199,6 +200,8 @@ int verification(double *x, double *A, double *b, int n)
 		{
 			correctRNo = correctRNo + 1;
 		}
+		else
+			printf("i = %d: %f %f\n", i, verifyB[i], b[i]);
 	}
 
 	free(verifyB);
