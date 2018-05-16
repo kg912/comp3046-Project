@@ -89,7 +89,7 @@ void gauss_elimination(double *A, int n, double *b, double *x, double *y)
 	}
 	//***********for check purpose***********//
 	printf("\n----------------------------------\nResults: ");
-	//Vec_Show(n, x);
+	Vec_Show(n, x);
 }
 
 
@@ -144,3 +144,7 @@ void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, in
 	//Vec_Show(n, x);
 
 }
+
+
+
+
