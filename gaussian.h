@@ -1,5 +1,4 @@
-/* matrix.h */
-
+/* ---------------------gaussian.h--------------------- */
 #ifndef GAUSSIAN_H
 #define GAUSSIAN_H
 
@@ -19,6 +18,16 @@ void Vec_Show(int size, double *b);
 void gauss_elimination(double *A, int n, double *b, double *x, double *y);
 
 /* gaussian elimination function using parallel threads r */
-void gauss_elimination_omp(double *A, int n, double *b, double *x, double *y, int thread_count);
+void gauss_elimination_omp(double *pA, int n, double *pb, double *x, double *y, int thread_count);
 
 #endif
+
+
+
+
+
+
+
+
+
+
